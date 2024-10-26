@@ -7,6 +7,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.schema import SystemMessage
 
 from utils import messages, update_progress
+from services.llm import request_to_chat_openai
 
 
 BASE_SELECTION_PROMPT = """クラスタにつけられたラベル名と、紐づくデータ点のテキストを与えるので、
@@ -16,7 +17,8 @@ BASE_SELECTION_PROMPT = """クラスタにつけられたラベル名と、紐�
 * ラベルと各データ点のテキストを確認した上で、関連度の高いidを出力してください
 * 出力はカンマ区切りで、スペースを含めずに5つのidを出力して下さい
 * 出力結果は人間が閲覧するので、人間が解釈しやすいテキストを選定してください
-    * 出力はWebで公開されるため過激な発言や余りにも侮辱的な発言等の閲覧者が不快感を覚えるものは選定しないでください
+    * 出力はWebで公開されるため過激な発言や侮辱的な発言等の閲覧者が不快感を覚えるものは選定しないでください
+    * 同様に公共放送において不適切な単語が含まれているものは選定しないでください
 * 今回の分析は衆院選における意見分析を行うために実施しているため衆院選と関連性の低いものは選定しないでください
     * データソースはツイートであり、ハッシュタグのみのツイート等も含まれるため、それらは選定しないでください
 
@@ -32,10 +34,12 @@ A199_0,A308_0,A134_2,A134_1,A123_0
 
 
 def select_relevant_ids_by_llm(prompt, model="gpt-4o"):
-    llm = ChatOpenAI(model_name=model, temperature=0.0)
+    messages = [
+        {"role": "user", "content": prompt}
+    ]
     try:
-        response = llm([SystemMessage(content=prompt)])
-        selected_ids = response.content.strip().split(',')
+        response = request_to_chat_openai(messages=messages, model=model)
+        selected_ids = response.strip().split(',')
         return [id_str.strip() for id_str in selected_ids]
     except Exception as e:
         print(e)
@@ -115,11 +119,14 @@ def labelling(config):
 
 
 def generate_label(question, args_sample, args_sample_outside, prompt, model):
-    llm = ChatOpenAI(model_name=model, temperature=0.0)
     outside = '\n * ' + '\n * '.join(args_sample_outside)
     inside = '\n * ' + '\n * '.join(args_sample)
     input = f"Question of the consultation:{question}\n\n" + \
         f"Examples of arguments OUTSIDE the cluster:\n {outside}" + \
         f"Examples of arguments INSIDE the cluster:\n {inside}"
-    response = llm(messages=messages(prompt, input)).content.strip()
+    messages = [
+        {"role": "user", "content": prompt},
+        {"role": "user", "content": input}
+    ]
+    response = request_to_chat_openai(messages=messages, model=model)
     return response

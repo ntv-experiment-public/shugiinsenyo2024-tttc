@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from langchain.chat_models import ChatOpenAI
 from utils import messages, update_progress
+from services.llm import request_to_chat_openai
 
 
 def takeaways(config):
@@ -43,7 +44,10 @@ def takeaways(config):
 
 
 def generate_takeaways(args_sample, prompt, model):
-    llm = ChatOpenAI(model_name=model, temperature=0.0)
     input = "\n".join(args_sample)
-    response = llm(messages=messages(prompt, input)).content.strip()
+    messages = [
+        {"role": "user", "content": prompt},
+        {"role": "user", "content": input}
+    ]
+    response = request_to_chat_openai(messages=messages, model=model)
     return response

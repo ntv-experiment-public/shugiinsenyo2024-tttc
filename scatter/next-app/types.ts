@@ -65,4 +65,14 @@ export type Dimensions = {
   scaleY: (y: number) => number;
 };
 
+export type FavoritePoint = {
+  arg_id: string;
+  argument: string;
+  comment_id: string;
+  x: number;
+  y: number;
+  p: number;
+  cluster_id: string;
+};
+
 export type Point = Argument & Cluster & CommentObj & { color: string };

@@ -5,7 +5,7 @@ const colors: string[] = [
   "#ff69b4", // Pink
   "#1e90ff", // Blue
   "#008080", // Teal
-  "#00d3d3", // Cyan
+  "#0000cd", // Medium-Blue
   "#cdcd00", // Yellow
   "#ffa500", // Orange
   "#ff0000", // Red
@@ -19,7 +19,7 @@ const colors: string[] = [
   "#4169e1", // Royal Blue
   "#2e8b57", // Sea Green
   "#8b4513", // Saddle Brown
-  "#00ffff", // Aqua
+  "#7c2e69", // Prune
   "#ffd700", // Gold
   "#4b0082", // Indigo
   "#ff8c00", // Dark Orange

@@ -5,7 +5,11 @@ import pandas as pd
 from langchain.chat_models import ChatOpenAI
 from utils import messages, update_progress
 import concurrent.futures
+from services.llm import request_to_chat_openai
+import re
+import logging
 
+COMMA_AND_SPACE_AND_RIGHT_BRACKET = re.compile(r',\s*(\])')
 
 def extraction(config):
     dataset = config['output_dir']
@@ -40,18 +44,52 @@ def extraction(config):
     results.to_csv(path, index=False)
 
 
+logging.basicConfig(level=logging.ERROR)
+
 def extract_batch(batch, prompt, model, workers):
+    
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
         futures = [executor.submit(
             extract_arguments, input, prompt, model) for input in list(batch)]
-        concurrent.futures.wait(futures)
-        return [future.result() for future in futures]
+
+        done, not_done = concurrent.futures.wait(futures, timeout=30)
+
+        results = []
+
+        for future in not_done:
+            if not future.cancelled():
+                future.cancel()
+            results.append([])
+
+        for future in done:
+            try:
+                result = future.result()
+                results.append(result)
+            except Exception as e:
+                logging.error(f"Task {future} failed with error: {e}")
+                results.append([])
+
+        return results
+
+def extract_by_llm(input, prompt, model):
+    messages = [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": input}
+    ]
+    response = request_to_chat_openai(messages=messages, model=model)
+    return response
+
 
 
 def extract_arguments(input, prompt, model, retries=1):
-    llm = ChatOpenAI(model_name=model, temperature=0.0)
+
+    messages = [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": input}
+    ]
     try:
-        response = llm(messages=messages(prompt, input)).content.strip()
+        response = request_to_chat_openai(messages=messages, model=model, is_json=False)
+        response = COMMA_AND_SPACE_AND_RIGHT_BRACKET.sub(r'\1', response).replace("```json", "").replace("```", "")
         obj = json.loads(response)
         # LLM sometimes returns valid JSON string
         if isinstance(obj, str):
@@ -71,9 +109,5 @@ def extract_arguments(input, prompt, model, retries=1):
         print("JSON error:", e)
         print("Input was:", input)
         print("Response was:", response)
-        if retries > 0:
-            print("Retrying...")
-            return extract_arguments(input, prompt, model, retries - 1)
-        else:
-            print("Silently giving up on trying to generate valid list.")
-            return []
+        print("Silently giving up on trying to generate valid list.")
+        return []

@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 from langchain.chat_models import ChatOpenAI
 from utils import messages, update_progress
+from services.llm import request_to_chat_openai
+
 
 
 def overview(config):
@@ -28,8 +30,11 @@ def overview(config):
         input += f"# Cluster {i}/{len(ids)}: {labels.loc[id]['label']}\n\n"
         input += takeaways.loc[id]['takeaways'] + '\n\n'
 
-    llm = ChatOpenAI(model_name=model, temperature=0.0)
-    response = llm(messages=messages(prompt, input)).content.strip()
+    messages = [
+        {"role": "user", "content": prompt},
+        {"role": "user", "content": input}
+    ]
+    response = request_to_chat_openai(messages=messages)
 
     with open(path, 'w') as file:
         file.write(response)

@@ -8,7 +8,7 @@ const CustomIntroduction = (props: any) => {
     // 元のコードを使用
     if (config.intro) {
       return (
-        <div className="max-w-xl m-auto mb-4 text-justify">
+        <div className="m-auto mb-4 text-justify">
             <div className="mb-6">
             <p>日本テレビでは、AIエンジニアの安野貴博さんのチームと共同で、「ブロードリスニング」という手法を使い、インターネット上の選挙に関する声を「見える化」しました。</p>
             <p>Ｘ上の投稿から、「政治に対する意見や要望」「政党に対する見方」などをAIが抽出。似た意見をグループ（クラスタ）化し、マッピングして表示します。</p>
