@@ -94,7 +94,8 @@
     },
     "options": {
       "include_minor": true,
-      "sampling_num": 5000
+      "sampling_num": 5000,
+      "title_in_map": null
     }
   },
   {

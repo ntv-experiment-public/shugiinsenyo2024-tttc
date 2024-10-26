@@ -1,8 +1,10 @@
-import React, { useState, useEffect, use, useRef } from "react";
-import { Result, Point } from "@/types";
+import React, { useState, useEffect, useRef } from "react";
+import { Result } from "@/types";
 import useClusterColor from "@/hooks/useClusterColor";
 import useTranslatorAndReplacements from "@/hooks/useTranslatorAndReplacements";
-import Map from "./Map";
+import MobileMap from "./MobileMap";
+import DesktopMap from "./DesktopMap";
+
 import Header from "./Header";
 import Appendix from "./Appendix";
 import Outline from "./Outline";
@@ -15,6 +17,16 @@ import CustomIntroduction from "./CustomIntroduction";
 
 type ReportProps = Result;
 const converter = new showdown.Converter();
+
+const ResponsiveMap = (props: any) => {
+  const [isTouch, setIsTouch] = useState(false);
+
+  useEffect(() => {
+    setIsTouch(isTouchDevice());
+  }, []);
+
+  return isTouch ? <MobileMap {...props} /> : <DesktopMap {...props} />;
+};
 
 function Report(props: ReportProps) {
   const [openMap, setOpenMap] = useState<string | null>(null);
@@ -41,7 +53,7 @@ function Report(props: ReportProps) {
 
   if (openMap) {
     return (
-      <Map
+      <ResponsiveMap
         {...props}
         color={color}
         translator={translator}
@@ -70,7 +82,7 @@ function Report(props: ReportProps) {
           <div id="introduction" className="my-4">
             <CustomIntroduction config={config} translator={translator} />
             <div id="big-map">
-              <Map
+              <ResponsiveMap
                 {...props}
                 translator={translator}
                 color={color}
@@ -116,7 +128,7 @@ function Report(props: ReportProps) {
                   </div>
                   <div className="text-left">{t(cluster.takeaways)}</div>
                   <div className="my-4">
-                    <Map
+                    <ResponsiveMap
                       {...props}
                       translator={translator}
                       color={color}
